@@ -1,6 +1,6 @@
 name: token_interceptor
 description: "A Flutter Dio interceptor for handling JWT token authentication with automatic refresh."
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/narzu11ayevnodirbek/token_interceptor
 repository: https://github.com/narzu11ayevnodirbek/token_interceptor
 license: MIT
