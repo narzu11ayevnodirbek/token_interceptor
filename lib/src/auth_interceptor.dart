@@ -1,19 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:token_interceptor/src/models/refresh_response.dart';
 import 'token_manager.dart';
 import 'api_client.dart';
 
+/// An interceptor that attaches Authorization header to all requests
+/// and refreshes token on 401 errors.
 class AuthInterceptor extends QueuedInterceptor {
-  final Dio dio;
-  final ApiClient apiClient;
-
   AuthInterceptor({
     required this.dio,
     required this.apiClient,
   });
+  final Dio dio;
+  final ApiClient apiClient;
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final accessToken = TokenManager.instance.accessToken;
+  void onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
+    final String? accessToken = TokenManager.instance.accessToken;
     if (accessToken != null) {
       options.headers['Authorization'] = 'Bearer $accessToken';
     }
@@ -26,13 +29,14 @@ class AuthInterceptor extends QueuedInterceptor {
       return handler.next(err);
     }
 
-    final refreshToken = await TokenManager.instance.getRefreshToken();
+    final String? refreshToken = await TokenManager.instance.getRefreshToken();
     if (refreshToken == null) {
       await TokenManager.instance.clearTokens();
       return handler.next(err);
     }
 
-    final refreshResponse = await apiClient.refreshToken(refreshToken);
+    final RefreshResponse refreshResponse =
+        await apiClient.refreshToken(refreshToken);
     if (!refreshResponse.success) {
       await TokenManager.instance.clearTokens();
       return handler.next(err);
@@ -44,8 +48,9 @@ class AuthInterceptor extends QueuedInterceptor {
       saveRefreshToken: true,
     );
 
-    final newRequest = err.requestOptions..headers['Authorization'] = 'Bearer ${refreshResponse.accessToken}';
-    final response = await dio.fetch(newRequest);
+    final RequestOptions newRequest = err.requestOptions
+      ..headers['Authorization'] = 'Bearer ${refreshResponse.accessToken}';
+    final Response<dynamic> response = await dio.fetch(newRequest);
     return handler.resolve(response);
   }
 }

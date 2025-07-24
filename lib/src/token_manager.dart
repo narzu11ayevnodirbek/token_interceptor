@@ -1,15 +1,18 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenManager {
+  TokenManager._internal();
   static final TokenManager instance = TokenManager._internal();
-  final _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   String? _accessToken;
 
-  TokenManager._internal();
-
   String? get accessToken => _accessToken;
 
+  /// Sets access and refresh tokens securely.
+  ///
+  /// [accessToken] - JWT/Bearer access token
+  /// [refreshToken] - optional refresh token
   Future<void> setTokens(
     String accessToken, {
     String? refreshToken,
